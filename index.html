@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Моя неделя">
+<meta name="theme-color" content="#b8894a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Моя неделя — Наташа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400;500&display=swap">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --card: #ffffff;
+  --border: #e0d8c8;
+  --shadow: rgba(180,160,120,0.13);
+  --cream: #3d3228;
+  --warm: #b8894a;
+  --soft: #a0907a;
+  --rose: #c4856a;
+  --sage: #5a8a60;
+  --lavender: #7a6e9a;
+  --sky: #5a8aa0;
+  --purple: #9b8ad4;
+  --green: #8ab870;
+  --steel: #7aaabf;
+  --text: #4a4035;
+  --muted: #a09080;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ── NAV TABS ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(245,240,232,0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px 10px;
+}
+
+.nav-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 0.03em;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--soft);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab.active {
+  background: var(--warm);
+  color: white;
+  border-color: var(--warm);
+  font-weight: 500;
+}
+
+/* ── SECTIONS ── */
+.section { display: none; padding: 20px 16px 0; }
+.section.active { display: block; }
+
+.section-heading {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 300;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.section-sub {
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+/* ── DAY SELECTOR ── */
+.day-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 16px;
+  padding-bottom: 2px;
+}
+.day-tabs::-webkit-scrollbar { display: none; }
+
+.day-tab {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--soft);
+  transition: all 0.2s;
+  text-align: center;
+}
+.day-tab .day-short { font-weight: 500; font-size: 0.82rem; display: block; color: var(--cream); }
+.day-tab .day-hint  { font-size: 0.6rem; color: var(--muted); display: block; margin-top: 1px; }
+.day-tab.active {
+  background: var(--cream);
+  border-color: var(--cream);
+}
+.day-tab.active .day-short,
+.day-tab.active .day-hint { color: white; }
+
+/* ── DAY CARD ── */
+.day-view { display: none; }
+.day-view.active { display: block; }
+
+.day-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px var(--shadow);
+}
+
+.day-card-header {
+  padding: 16px 20px 13px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #fdfaf5, #f8f2e8);
+}
+.day-card-name { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: var(--cream); }
+.day-card-type { font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+
+.blocks { padding: 14px; display: flex; flex-direction: column; gap: 7px; }
+
+.block {
+  border-radius: 11px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.block-time { font-size: 0.7rem; color: var(--muted); min-width: 42px; padding-top: 2px; flex-shrink: 0; letter-spacing: 0.03em; }
+.block-label { font-size: 0.85rem; color: var(--text); font-weight: 400; line-height: 1.3; }
+.block-note  { font-size: 0.7rem; color: var(--soft); margin-top: 2px; line-height: 1.4; }
+
+.morning   { background: #fdf6ec; border-left: 2px solid var(--warm); }
+.study     { background: #f3f0f8; border-left: 2px solid var(--lavender); }
+.kids      { background: #f0f7f1; border-left: 2px solid var(--sage); }
+.freelance { background: #f5f0fa; border-left: 2px solid var(--purple); }
+.home      { background: #f0f5f8; border-left: 2px solid var(--steel); }
+.food      { background: #f5faf0; border-left: 2px solid var(--green); }
+.self      { background: #fdf0eb; border-left: 2px solid var(--rose); }
+.walk      { background: #edf7ee; border-left: 2px solid #6db877; }
+.evening   { background: #fef9f5; border-left: 2px solid #ddc8a8; }
+.free      { background: #f8f8f5; border-left: 2px solid #c8c0b0; }
+.special   { background: #fdf4ff; border-left: 2px solid #c084d4; }
+
+/* ── ROUTINES ── */
+.routine-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px var(--shadow);
+  margin-bottom: 16px;
+}
+.routine-header {
+  padding: 16px 20px 13px;
+  border-bottom: 1px solid var(--border);
+}
+.routine-header.mh { background: linear-gradient(135deg, #fef8ee, #fdf3e3); }
+.routine-header.eh { background: linear-gradient(135deg, #f0f4f8, #e8eef5); }
+.routine-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--cream); }
+.routine-sub   { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+
+.steps { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.step  { display: flex; gap: 12px; align-items: flex-start; }
+.step-time { font-size: 0.72rem; color: var(--warm); font-weight: 500; min-width: 40px; padding-top: 1px; flex-shrink: 0; }
+.step-label { font-size: 0.85rem; color: var(--text); font-weight: 400; }
+.step-detail { font-size: 0.72rem; color: var(--soft); margin-top: 3px; line-height: 1.5; }
+
+/* ── MASSAGE ── */
+.massage-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px var(--shadow);
+  margin-bottom: 16px;
+}
+.massage-header { padding: 16px 20px 13px; border-bottom: 1px solid var(--border); }
+.massage-header.fh { background: linear-gradient(135deg, #fdf0eb, #fae8df); }
+.massage-header.lh { background: linear-gradient(135deg, #edf7ee, #e3f2e4); }
+.massage-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--cream); }
+.massage-sub   { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+
+.m-steps { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.m-step  { display: flex; gap: 10px; align-items: flex-start; }
+.m-num   { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--rose); min-width: 22px; line-height: 1.2; flex-shrink: 0; }
+.m-num.g { color: var(--sage); }
+.m-label  { font-size: 0.85rem; color: var(--text); font-weight: 400; }
+.m-time   { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+.m-detail { font-size: 0.72rem; color: var(--soft); margin-top: 3px; line-height: 1.5; }
+
+.tip {
+  margin: 0 16px 16px;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.74rem;
+  color: var(--soft);
+  line-height: 1.6;
+}
+.tip.warm  { background: #fdf6ec; border-left: 2px solid var(--warm); }
+.tip.green { background: #f0f7f1; border-left: 2px solid var(--sage); }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 0 0 20px;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.68rem; color: var(--soft); }
+.legend-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── INSTALL HINT ── */
+.install-hint {
+  background: #f3f0f8;
+  border: 1px solid #d5cee8;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+.install-hint strong { color: var(--lavender); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-title">Моя неделя 🌿</div>
+  <div class="tabs">
+    <div class="tab active" onclick="showSection('week')">📅 Неделя</div>
+    <div class="tab" onclick="showSection('routines')">☀️ Рутины</div>
+    <div class="tab" onclick="showSection('massage')">🌸 Массажи</div>
+    <div class="tab" onclick="showSection('install')">📲 Установка</div>
+  </div>
+</nav>
+
+<!-- ══════════════ НЕДЕЛЯ ══════════════ -->
+<div id="week" class="section active">
+  <div class="section-heading">Расписание недели</div>
+  <div class="section-sub">Наташа · 2026</div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--warm)"></div>Рутина</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lavender)"></div>Учёба</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sage)"></div>Дети</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Фриланс</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6db877"></div>Прогулка</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--steel)"></div>Уборка</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Еда</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rose)"></div>Для себя</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c084d4"></div>Особое</div>
+  </div>
+
+  <div class="day-tabs">
+    <div class="day-tab active" onclick="showDay('pn')"><span class="day-short">Пн</span><span class="day-hint">студия+гимн.</span></div>
+    <div class="day-tab" onclick="showDay('vt')"><span class="day-short">Вт</span><span class="day-hint">баскет</span></div>
+    <div class="day-tab" onclick="showDay('sr')"><span class="day-short">Ср</span><span class="day-hint">студия+гимн.</span></div>
+    <div class="day-tab" onclick="showDay('cht')"><span class="day-short">Чт</span><span class="day-hint">завтрак+баскет</span></div>
+    <div class="day-tab" onclick="showDay('pt')"><span class="day-short">Пт</span><span class="day-hint">студия+гимн.</span></div>
+    <div class="day-tab" onclick="showDay('sb')"><span class="day-short">Сб</span><span class="day-hint">рынок</span></div>
+    <div class="day-tab" onclick="showDay('vs')"><span class="day-short">Вс</span><span class="day-hint">заготовки</span></div>
+  </div>
+
+  <!-- ПН -->
+  <div id="day-pn" class="day-view active">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Понедельник</div>
+        <div class="day-card-type">студия · гимнастика · уборка</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div><div class="block-note">зарядка стоп → умывание → зарядка+массаж лица → макияж → настрой → завтрак</div></div></div>
+        <div class="block study"><span class="block-time">9:00</span><div><div class="block-label">📚 Студия</div><div class="block-note">до 12:00 · дорога 10–15 мин</div></div></div>
+        <div class="block freelance"><span class="block-time">12:15</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">обед + работа до 13:30</div></div></div>
+        <div class="block kids"><span class="block-time">13:30</span><div><div class="block-label">🚗 Забрать сына</div><div class="block-note">дома в 14:15</div></div></div>
+        <div class="block freelance"><span class="block-time">14:30</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">до 16:30</div></div></div>
+        <div class="block kids"><span class="block-time">16:30</span><div><div class="block-label">🤸 Собираемся на гимнастику</div><div class="block-note">выезд в 16:30</div></div></div>
+        <div class="block home"><span class="block-time">17:00</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">пока сын на гимнастике · ~1 час</div></div></div>
+        <div class="block walk"><span class="block-time">19:00</span><div><div class="block-label">🚶‍♀️ Пешком домой с сыном</div><div class="block-note">по красивой дороге · ваше время вдвоём</div></div></div>
+        <div class="block evening"><span class="block-time">19:30</span><div><div class="block-label">🌙 Вечерняя рутина</div><div class="block-note">кухня → дети → душ → массаж ног → вещи → 22:00 без экранов</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВТ -->
+  <div id="day-vt" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Вторник</div>
+        <div class="day-card-type">фриланс · баскет · уборка</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div></div></div>
+        <div class="block freelance"><span class="block-time">7:30</span><div><div class="block-label">💻 Фриланс / учёба</div><div class="block-note">длинное утро до 13:30</div></div></div>
+        <div class="block kids"><span class="block-time">13:30</span><div><div class="block-label">🚗 Забрать сына</div><div class="block-note">дома в 14:15</div></div></div>
+        <div class="block kids"><span class="block-time">15:00</span><div><div class="block-label">🏀 Баскет сына</div><div class="block-note">выезд 15:00 · 15:30–17:00</div></div></div>
+        <div class="block home"><span class="block-time">15:30</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">пока сын на баскете · ~30 мин</div></div></div>
+        <div class="block freelance"><span class="block-time">17:00</span><div><div class="block-label">💻 Фриланс / учёба</div><div class="block-note">после баскета</div></div></div>
+        <div class="block evening"><span class="block-time">19:30</span><div><div class="block-label">🌙 Вечерняя рутина</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СР -->
+  <div id="day-sr" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Среда</div>
+        <div class="day-card-type">студия · гимнастика · уборка</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div></div></div>
+        <div class="block study"><span class="block-time">9:00</span><div><div class="block-label">📚 Студия</div><div class="block-note">до 12:00</div></div></div>
+        <div class="block freelance"><span class="block-time">12:15</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">до 13:30</div></div></div>
+        <div class="block kids"><span class="block-time">13:30</span><div><div class="block-label">🚗 Забрать сына</div></div></div>
+        <div class="block freelance"><span class="block-time">14:30</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">до 16:30</div></div></div>
+        <div class="block kids"><span class="block-time">16:30</span><div><div class="block-label">🤸 Собираемся на гимнастику</div></div></div>
+        <div class="block home"><span class="block-time">17:00</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">пока сын на гимнастике · ~1 час</div></div></div>
+        <div class="block walk"><span class="block-time">19:00</span><div><div class="block-label">🚶‍♀️ Пешком домой с сыном</div></div></div>
+        <div class="block evening"><span class="block-time">19:30</span><div><div class="block-label">🌙 Вечерняя рутина</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ЧТ -->
+  <div id="day-cht" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Четверг</div>
+        <div class="day-card-type">маникюр · завтрак с подругой · баскет</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div></div></div>
+        <div class="block self"><span class="block-time">7:30</span><div><div class="block-label">💅 Маникюр / уход за собой</div><div class="block-note">время только для себя · до 8:30</div></div></div>
+        <div class="block special"><span class="block-time">9:00</span><div><div class="block-label">☕ Завтрак-встреча</div><div class="block-note">подруга или интересный человек · каждую неделю · до 10:00</div></div></div>
+        <div class="block freelance"><span class="block-time">10:00</span><div><div class="block-label">💻 Фриланс / учёба</div><div class="block-note">до 13:30</div></div></div>
+        <div class="block kids"><span class="block-time">13:30</span><div><div class="block-label">🚗 Забрать сына</div></div></div>
+        <div class="block kids"><span class="block-time">15:00</span><div><div class="block-label">🏀 Баскет сына</div><div class="block-note">выезд 15:00 · 15:30–17:00</div></div></div>
+        <div class="block home"><span class="block-time">15:30</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">пока сын на баскете · ~30 мин</div></div></div>
+        <div class="block freelance"><span class="block-time">17:00</span><div><div class="block-label">💻 Фриланс / учёба</div><div class="block-note">после баскета</div></div></div>
+        <div class="block evening"><span class="block-time">19:30</span><div><div class="block-label">🌙 Вечерняя рутина</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПТ -->
+  <div id="day-pt" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Пятница</div>
+        <div class="day-card-type">студия · гимнастика · вечер для себя</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div></div></div>
+        <div class="block study"><span class="block-time">9:00</span><div><div class="block-label">📚 Студия</div><div class="block-note">до 12:00</div></div></div>
+        <div class="block freelance"><span class="block-time">12:15</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">до 13:30</div></div></div>
+        <div class="block kids"><span class="block-time">13:30</span><div><div class="block-label">🚗 Забрать сына</div></div></div>
+        <div class="block freelance"><span class="block-time">14:30</span><div><div class="block-label">💻 Фриланс</div><div class="block-note">до 16:30</div></div></div>
+        <div class="block kids"><span class="block-time">16:30</span><div><div class="block-label">🤸 Собираемся на гимнастику</div></div></div>
+        <div class="block home"><span class="block-time">17:00</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">пока сын на гимнастике · ~1 час</div></div></div>
+        <div class="block walk"><span class="block-time">19:00</span><div><div class="block-label">🚶‍♀️ Пешком домой с сыном</div></div></div>
+        <div class="block self"><span class="block-time">20:00</span><div><div class="block-label">✨ Пятничный вечер для себя</div><div class="block-note">маска, сериал, тишина — заслужила</div></div></div>
+        <div class="block evening"><span class="block-time">21:00</span><div><div class="block-label">🌙 Вечерняя рутина</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СБ -->
+  <div id="day-sb" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Суббота</div>
+        <div class="day-card-type">баскет · рынок · уборка</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">6:00</span><div><div class="block-label">🌅 Утренняя рутина</div><div class="block-note">можно чуть мягче</div></div></div>
+        <div class="block kids"><span class="block-time">11:00</span><div><div class="block-label">🏀 Баскет сына</div><div class="block-note">выезд 11:00 · 11:30–13:00</div></div></div>
+        <div class="block food"><span class="block-time">11:30</span><div><div class="block-label">🛒 Рынок — закупка на неделю</div><div class="block-note">пока сын на баскете · центр рядом</div></div></div>
+        <div class="block home"><span class="block-time">11:30</span><div><div class="block-label">🏠 Уборка</div><div class="block-note">~30 мин параллельно или после рынка</div></div></div>
+        <div class="block walk"><span class="block-time">13:00</span><div><div class="block-label">🚶‍♀️ Домой пешком с сыном</div></div></div>
+        <div class="block free"><span class="block-time">14:00</span><div><div class="block-label">🌿 Свободное время</div><div class="block-note">отдых, дети, уют</div></div></div>
+        <div class="block evening"><span class="block-time">19:30</span><div><div class="block-label">🌙 Вечерняя рутина</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВС -->
+  <div id="day-vs" class="day-view">
+    <div class="day-card">
+      <div class="day-card-header">
+        <div class="day-card-name">Воскресенье</div>
+        <div class="day-card-type">заготовки · твой день 🤍</div>
+      </div>
+      <div class="blocks">
+        <div class="block morning"><span class="block-time">7:00</span><div><div class="block-label">🌅 Мягкое утро</div><div class="block-note">без будильника если можно</div></div></div>
+        <div class="block self"><span class="block-time">утро</span><div><div class="block-label">🧘 Стретчинг / йога</div><div class="block-note">15–20 мин · без давления</div></div></div>
+        <div class="block food"><span class="block-time">11:00</span><div><div class="block-label">🥘 Заготовки на неделю</div><div class="block-note">варим, режем, раскладываем<br>это подарок себе на 7 дней вперёд</div></div></div>
+        <div class="block free"><span class="block-time">14:00</span><div><div class="block-label">🌿 Свободное время</div><div class="block-note">дети, прогулка, сериал</div></div></div>
+        <div class="block self"><span class="block-time">вечер</span><div><div class="block-label">✨ Только для себя</div><div class="block-note">маска, книга, тишина</div></div></div>
+        <div class="block evening"><span class="block-time">21:00</span><div><div class="block-label">🌙 Спокойный вечер</div><div class="block-note">готовишься к новой неделе</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ РУТИНЫ ══════════════ -->
+<div id="routines" class="section">
+  <div class="section-heading">Мои рутины</div>
+  <div class="section-sub">утро и вечер · каждый день</div>
+
+  <div class="routine-card">
+    <div class="routine-header mh">
+      <div class="routine-title">🌅 Утренняя рутина</div>
+      <div class="routine-sub">6:00 — 7:30</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-time">6:00</div><div><div class="step-label">Зарядка стоп в постели</div><div class="step-detail">Крутить стопы · тянуть носок на себя / от себя · 1 мин<br>Это убирает утреннюю боль в пятке</div></div></div>
+      <div class="step"><div class="step-time">6:10</div><div><div class="step-label">Встать мягко</div><div class="step-detail">Перекаты пятка → носок, 10–15 раз<br>Растяжка икры у стены — 30–40 сек каждую ногу</div></div></div>
+      <div class="step"><div class="step-time">6:20</div><div><div class="step-label">Умывание + крем</div><div class="step-detail">Чистое лицо → крем или сыворотка</div></div></div>
+      <div class="step"><div class="step-time">6:30</div><div><div class="step-label">Зарядка тело + лицо</div><div class="step-detail">Ягодичный мост · кошка · дыхательное втягивание живота<br>+ Гимнастика для глаз (восьмёрки правым глазом)<br>+ Лимфодренажный массаж лица — 2–3 мин</div></div></div>
+      <div class="step"><div class="step-time">6:45</div><div><div class="step-label">Макияж</div></div></div>
+      <div class="step"><div class="step-time">7:00</div><div><div class="step-label">Настрой</div><div class="step-detail">1 минута: что я хочу почувствовать сегодня?</div></div></div>
+      <div class="step"><div class="step-time">7:15</div><div><div class="step-label">Список дел</div></div></div>
+      <div class="step"><div class="step-time">7:30</div><div><div class="step-label">Завтрак 🌿</div></div></div>
+    </div>
+  </div>
+
+  <div class="routine-card">
+    <div class="routine-header eh">
+      <div class="routine-title">🌙 Вечерняя рутина</div>
+      <div class="routine-sub">19:30 — 22:00</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-time">19:30</div><div><div class="step-label">Кухня</div><div class="step-detail">Лёгкий ужин или разогрев заготовок</div></div></div>
+      <div class="step"><div class="step-time">20:00</div><div><div class="step-label">Дети</div><div class="step-detail">Время с детьми, укладывание</div></div></div>
+      <div class="step"><div class="step-time">20:30</div><div><div class="step-label">Душ</div><div class="step-detail">Тепло, не торопясь · ты это заслужила</div></div></div>
+      <div class="step"><div class="step-time">20:45</div><div><div class="step-label">Массаж ног</div><div class="step-detail">Мячик → растяжка икр → самомассаж → ноги вверх 5–10 мин</div></div></div>
+      <div class="step"><div class="step-time">21:15</div><div><div class="step-label">Обувь / глажка</div><div class="step-detail">или прогулка вместо</div></div></div>
+      <div class="step"><div class="step-time">21:25</div><div><div class="step-label">Чтение / созвон</div></div></div>
+      <div class="step"><div class="step-time">21:40</div><div><div class="step-label">Вещи на завтра</div></div></div>
+      <div class="step"><div class="step-time">22:00</div><div><div class="step-label">Без экранов 🌙</div><div class="step-detail">Тело отдыхает, голова тоже</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ МАССАЖИ ══════════════ -->
+<div id="massage" class="section">
+  <div class="section-heading">Мои массажи</div>
+  <div class="section-sub">лицо и ноги · забота о теле</div>
+
+  <div class="massage-card">
+    <div class="massage-header fh">
+      <div class="massage-title">🌸 Лимфодренажный массаж лица</div>
+      <div class="massage-sub">анти-отёчный · руками · 2–3 минуты</div>
+    </div>
+    <div class="m-steps">
+      <div class="m-step"><div class="m-num">1</div><div><div class="m-label">Открыть лимфу</div><div class="m-time">20–30 сек</div><div class="m-detail">Пальцы за уши → мягко нажимать и отпускать, 10–15 раз<br>Затем по бокам шеи вниз к ключицам</div></div></div>
+      <div class="m-step"><div class="m-num">2</div><div><div class="m-label">Шея вниз</div><div class="m-time">30 сек</div><div class="m-detail">От уха → вниз к ключице · ладонью медленно<br>5–7 раз с каждой стороны</div></div></div>
+      <div class="m-step"><div class="m-num">3</div><div><div class="m-label">Овал лица</div><div class="m-time">40–60 сек</div><div class="m-detail">От подбородка → к ушам<br>Подтягиваю лицо вверх и в стороны · 5–7 раз</div></div></div>
+      <div class="m-step"><div class="m-num">4</div><div><div class="m-label">Щёки</div><div class="m-time">30–40 сек</div><div class="m-detail">От носа → к ушам · мягкие скользящие · 5–7 раз</div></div></div>
+      <div class="m-step"><div class="m-num">5</div><div><div class="m-label">Под глазами</div><div class="m-time">20–30 сек</div><div class="m-detail">От внутреннего уголка → к виску<br>Подушечками пальцев · почти без давления</div></div></div>
+      <div class="m-step"><div class="m-num">6</div><div><div class="m-label">Завершение</div><div class="m-time">20 сек</div><div class="m-detail">Снова шея вниз к ключицам — закрепляю отток</div></div></div>
+    </div>
+    <div class="tip warm">🌿 На чистое лицо, можно с кремом или сывороткой<br>✨ После: лицо легче, меньше отёчности, свежесть<br>👉 2 минуты каждый день лучше, чем раз в неделю идеально</div>
+  </div>
+
+  <div class="massage-card">
+    <div class="massage-header lh">
+      <div class="massage-title">🌿 Вечерний массаж ног</div>
+      <div class="massage-sub">анти-отёчный · фасциит · 5–10 минут</div>
+    </div>
+    <div class="m-steps">
+      <div class="m-step"><div class="m-num g">1</div><div><div class="m-label">Зарядка стоп в постели</div><div class="m-time">утром · 1 минута</div><div class="m-detail">Крутить стопы · тянуть носок на себя и от себя<br>Убирает утреннюю боль в пятке</div></div></div>
+      <div class="m-step"><div class="m-num g">2</div><div><div class="m-label">Мячик / ролик</div><div class="m-time">вечер · 2–3 мин поочерёдно</div><div class="m-detail">Катать стопу медленно от пятки к пальцам<br>Искать болезненные точки — без жести<br>1–1.5 мин на каждую ногу</div></div></div>
+      <div class="m-step"><div class="m-num g">3</div><div><div class="m-label">Растяжка икр у стены</div><div class="m-time">1–2 минуты</div><div class="m-detail">30–40 сек на ногу · спокойно, без боли<br>Это ключ к пятке — не пропускать</div></div></div>
+      <div class="m-step"><div class="m-num g">4</div><div><div class="m-label">Самомассаж</div><div class="m-time">3–5 минут</div><div class="m-detail">Снизу вверх: щиколотка → икры → бёдра<br>Медленно — цель разогнать жидкость, не «разбить»</div></div></div>
+      <div class="m-step"><div class="m-num g">5</div><div><div class="m-label">Ноги вверх — финал</div><div class="m-time">5–10 минут</div><div class="m-detail">Лечь и поднять ноги<br>Уходит отёчность · ноги становятся легче</div></div></div>
+    </div>
+    <div class="tip green">🌿 Минимум если устала: мячик + ноги вверх<br>✨ Если пятка ноет — уменьшать давление<br>👉 Каждый день по 3 мин лучше, чем раз в 3 дня идеально</div>
+  </div>
+</div>
+
+<!-- ══════════════ УСТАНОВКА ══════════════ -->
+<div id="install" class="section">
+  <div class="section-heading">Установить как приложение</div>
+  <div class="section-sub">айфон и компьютер</div>
+
+  <div class="install-hint">
+    <strong>📱 На iPhone / iPad:</strong><br>
+    1. Открой этот файл в Safari<br>
+    2. Нажми кнопку «Поделиться» (квадрат со стрелкой вверх)<br>
+    3. Прокрути вниз → «На экран "Домой"»<br>
+    4. Нажми «Добавить»<br>
+    Готово — появится иконка на главном экране, открывается как приложение без браузерной строки 🌿
+  </div>
+
+  <div class="install-hint">
+    <strong>💻 На компьютере (Chrome / Edge):</strong><br>
+    1. Открой файл в Chrome или Edge<br>
+    2. В адресной строке справа появится иконка установки (⊕ или монитор)<br>
+    3. Нажми → «Установить»<br>
+    Появится в приложениях, открывается отдельным окном без браузера
+  </div>
+
+  <div class="install-hint">
+    <strong>🌐 Чтобы открывать по ссылке (а не файлу):</strong><br>
+    Можно разместить папку на любом бесплатном хостинге:<br>
+    • <strong>GitHub Pages</strong> — бесплатно, надёжно<br>
+    • <strong>Netlify</strong> — перетащи папку и готово<br>
+    • <strong>Vercel</strong> — так же просто<br><br>
+    Тогда у тебя будет ссылка типа <strong>natasha.netlify.app</strong> — открывай с любого устройства и добавляй на экран 🤍
+  </div>
+</div>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showDay(id) {
+  document.querySelectorAll('.day-view').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('day-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Auto-highlight today
+const days = ['vs','pn','vt','sr','cht','pt','sb'];
+const today = days[new Date().getDay()];
+const todayTab = document.querySelector(`.day-tab[onclick="showDay('${today}')"]`);
+if (todayTab) {
+  document.querySelectorAll('.day-view').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  todayTab.classList.add('active');
+  const view = document.getElementById('day-' + today);
+  if (view) view.classList.add('active');
+  todayTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+</script>
+</body>
+</html>
