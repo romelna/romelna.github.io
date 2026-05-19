@@ -647,18 +647,26 @@ const wdMap={1:'pn',2:'vt',3:'sr',4:'cht',5:'pt',6:'sb',0:'vs'};
 // Dates for each weekday in the current/next week starting from today
 function getWeekDates(){
   const today=new Date();
-  const wd=today.getDay(); // 0=вс
+  const wd=today.getDay();
   const monday=new Date(today);
   monday.setDate(today.getDate()-(wd===0?6:wd-1));
+  monday.setHours(0,0,0,0);
   const map={};
   const days=['pn','vt','sr','cht','pt','sb','vs'];
   for(let i=0;i<7;i++){
-    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    const d=new Date(monday);
+    d.setDate(monday.getDate()+i);
     map[days[i]]=d.toISOString().slice(0,10);
   }
   return map;
 }
 const weekDates=getWeekDates();
+
+document.querySelectorAll('.day-tab').forEach((tab,i)=>{
+  const d=new Date(Object.values(weekDates)[i]);
+  const label=tab.querySelector('.dh');
+  if(label) label.textContent=d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+});
 
 function showDay(id,el){
   document.querySelectorAll('.day-view').forEach(d=>d.classList.remove('active'));
