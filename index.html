@@ -960,5 +960,306 @@ buildWeight();
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDIKwJtO8cyt-cgD60gjy8fIVY-vA2TVKg",
+  authDomain: "natasha-week.firebaseapp.com",
+  databaseURL: "https://natasha-week-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "natasha-week",
+  storageBucket: "natasha-week.firebasestorage.app",
+  messagingSenderId: "237156876684",
+  appId: "1:237156876684:web:8094ad434ef750364c16a9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── ХЕЛПЕРЫ ──
+function dbGet(path){ return get(ref(db, path)).then(s=>s.exists()?s.val():null); }
+function dbSet(path, val){ return set(ref(db, path), val); }
+
+// ── ПЕРЕХВАТЫВАЕМ localStorage — заменяем на Firebase ──
+// Переопределяем функции которые используют localStorage
+
+// СОБЫТИЯ
+window.saveEvent = async function(dayId){
+  const time=document.getElementById('aei-time-'+dayId).value;
+  const text=document.getElementById('aei-text-'+dayId).value.trim();
+  const note=document.getElementById('aei-note-'+dayId).value.trim();
+  if(!text)return;
+  const date=weekDates[dayId];
+  const existing=await dbGet('events/'+date)||[];
+  const arr=Array.isArray(existing)?existing:Object.values(existing);
+  arr.push({id:Date.now(),time:time||'',label:text,note});
+  await dbSet('events/'+date, arr);
+  renderDayEvents(dayId);
+  renderAddArea(dayId);
+};
+
+window.deleteEvent = async function(date,id){
+  const existing=await dbGet('events/'+date)||[];
+  const arr=Array.isArray(existing)?existing:Object.values(existing);
+  const filtered=arr.filter(e=>e.id!==id);
+  await dbSet('events/'+date, filtered);
+  const activeDay=document.querySelector('.day-view.active');
+  if(activeDay){
+    const dId=activeDay.id.replace('day-','');
+    // reload from firebase
+    const data=await dbGet('events/'+weekDates[dId])||[];
+    const evArr=Array.isArray(data)?data:Object.values(data);
+    // store temporarily
+    localStorage.setItem('events-'+weekDates[dId], JSON.stringify(evArr));
+    renderDayEvents(dId);
+  }
+};
+
+// Переопределяем renderDayEvents чтобы грузить из Firebase
+window.renderDayEventsFirebase = async function(dayId){
+  const date=weekDates[dayId];
+  const blocksEl=document.getElementById('blocks-'+dayId);
+  if(!blocksEl)return;
+  blocksEl.querySelectorAll('.custom-block').forEach(e=>e.remove());
+  const fixed=(EXAMS[date]||[]).map(e=>({...e,fixed:true}));
+  const data=await dbGet('events/'+date);
+  const saved=data?(Array.isArray(data)?data:Object.values(data)):[];
+  // cache locally for offline
+  localStorage.setItem('events-'+date, JSON.stringify(saved));
+  const all=[...fixed,...saved];
+  all.forEach(ev=>{
+    const mins=timeToMins(ev.time);
+    const staticBlocks=[...blocksEl.querySelectorAll('.block[data-time]')];
+    let insertBefore=null;
+    for(const b of staticBlocks){if(parseInt(b.dataset.time)>mins){insertBefore=b;break;}}
+    const div=document.createElement('div');
+    div.className='custom-block';
+    div.innerHTML=`<span class="bt" style="color:var(--warm);font-weight:500">${ev.time}</span><div><div class="bl">${ev.label}</div>${ev.note?`<div class="bn">${ev.note}</div>`:''}</div>${ev.fixed?'':`<button class="del-btn" onclick="deleteEvent('${date}',${ev.id})">✕</button>`}`;
+    if(insertBefore)blocksEl.insertBefore(div,insertBefore);
+    else blocksEl.appendChild(div);
+  });
+};
+
+// ЗАДАЧИ
+window.addTask = async function(){
+  const inp=document.getElementById('task-input');
+  const text=inp.value.trim();
+  if(!text)return;
+  const key=getTodayKey();
+  const existing=await dbGet('tasks/'+key)||[];
+  const arr=Array.isArray(existing)?existing:Object.values(existing);
+  arr.push({text,done:false});
+  await dbSet('tasks/'+key, arr);
+  inp.value='';
+  await loadAndRenderTasks();
+};
+
+window.toggleTask = async function(i){
+  const key=getTodayKey();
+  const existing=await dbGet('tasks/'+key)||[];
+  const arr=Array.isArray(existing)?existing:Object.values(existing);
+  arr[i].done=!arr[i].done;
+  await dbSet('tasks/'+key, arr);
+  await loadAndRenderTasks();
+};
+
+window.deleteTask = async function(i){
+  const key=getTodayKey();
+  const existing=await dbGet('tasks/'+key)||[];
+  const arr=Array.isArray(existing)?existing:Object.values(existing);
+  arr.splice(i,1);
+  await dbSet('tasks/'+key, arr);
+  await loadAndRenderTasks();
+};
+
+async function loadAndRenderTasks(){
+  const key=getTodayKey();
+  const data=await dbGet('tasks/'+key);
+  const tasks=data?(Array.isArray(data)?data:Object.values(data)):[];
+  const list=document.getElementById('tasks-list');
+  const sub=document.getElementById('tasks-date-sub');
+  const d=new Date();
+  sub.textContent=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+  if(tasks.length===0){
+    list.innerHTML='<div class="tasks-empty">Задач пока нет ·<br>добавь первую 🌿</div>';
+    return;
+  }
+  list.innerHTML='';
+  tasks.forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className='task-item'+(t.done?' done-task':'');
+    div.innerHTML=`<div class="task-check ${t.done?'checked':''}" onclick="toggleTask(${i})">${t.done?'✓':''}</div><div class="task-text ${t.done?'done-text':''}">${t.text}</div><button class="task-del" onclick="deleteTask(${i})">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+// УРС САР ТРЕКЕР
+window.toggleUrsDay = async function(key){
+  const data=await dbGet('urs')||{};
+  data[key]?delete data[key]:(data[key]=true);
+  await dbSet('urs', data);
+  buildTrackerFromData(data);
+};
+
+async function loadTracker(){
+  const data=await dbGet('urs')||{};
+  buildTrackerFromData(data);
+}
+
+function buildTrackerFromData(saved){
+  const grid=document.getElementById('tgrid');
+  const today=new Date(); grid.innerHTML='';
+  const months=['мая','июня'];
+  for(let i=0;i<URS_DAYS;i++){
+    const d=new Date(URS_START); d.setDate(d.getDate()+i);
+    const key=d.toISOString().slice(0,10);
+    const isT=d.toDateString()===today.toDateString();
+    const done=saved[key];
+    const mo=d.getMonth()===4?months[0]:months[1];
+    const el=document.createElement('div');
+    el.className='td'+(done?' done':'')+(isT?' today':'');
+    el.innerHTML=`<span class="td-d">${d.getDate()}</span><span class="td-m">${mo}</span>`;
+    el.onclick=()=>toggleUrsDay(key);
+    grid.appendChild(el);
+  }
+  const n=Object.keys(saved).filter(k=>saved[k]).length;
+  document.getElementById('tcount').textContent=n===0
+    ?'Нажми на день чтобы отметить ✓'
+    :`✦ Пройдено ${n} из ${URS_DAYS} · осталось ${URS_DAYS-n}`;
+}
+
+// ВОДА
+window.setWater = async function(count){
+  const key='water-'+getTodayKey();
+  await dbSet('trackers/'+key, count);
+  buildWaterFromCount(count);
+};
+
+async function loadWater(){
+  const key='water-'+getTodayKey();
+  const count=await dbGet('trackers/'+key)||0;
+  buildWaterFromCount(count);
+}
+
+function buildWaterFromCount(count){
+  const row=document.getElementById('water-row');
+  row.innerHTML='';
+  for(let i=0;i<8;i++){
+    const filled=i<count;
+    const g=document.createElement('div');
+    g.className='wglass';
+    g.innerHTML=`<svg width="28" height="36" viewBox="0 0 28 36"><path d="M4 4 L2 32 Q2 34 4 34 L24 34 Q26 34 26 32 L24 4 Z" fill="${filled?'#7aaabf':'#e8e0d4'}" stroke="${filled?'#5a8aa0':'#c8c0b0'}" stroke-width="1.5"/>${filled?'<path d="M8 28 Q14 24 20 28" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>':''}</svg>`;
+    g.onclick=()=>setWater(i<count?i:i+1);
+    row.appendChild(g);
+  }
+  document.getElementById('water-label').textContent=`${count} из 8 стаканов${count>=8?' 🎉':''}`;
+}
+
+// ТРЕНИРОВКИ
+window.toggleWorkout = async function(i){
+  const data=await dbGet('trackers/workout-week')||{};
+  data[i]?delete data[i]:(data[i]=true);
+  await dbSet('trackers/workout-week', data);
+  buildWorkoutFromData(data);
+};
+
+async function loadWorkout(){
+  const data=await dbGet('trackers/workout-week')||{};
+  buildWorkoutFromData(data);
+}
+
+function buildWorkoutFromData(saved){
+  const el=document.getElementById('workout-days');
+  const dayNames=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  el.innerHTML='';
+  dayNames.forEach((n,i)=>{
+    const btn=document.createElement('button');
+    btn.className='wd-btn'+(saved[i]?' active':'');
+    btn.textContent=n;
+    btn.onclick=()=>toggleWorkout(i);
+    el.appendChild(btn);
+  });
+}
+
+// ШАГИ
+window.saveSteps = async function(){
+  const val=document.getElementById('steps-inp').value;
+  if(!val)return;
+  await dbSet('trackers/steps-'+getTodayKey(), Number(val));
+  showSteps(Number(val));
+};
+
+function showSteps(val){
+  document.getElementById('steps-display').textContent=Number(val).toLocaleString('ru')+' шагов';
+  const pct=Math.min(100,Math.round(val/10000*100));
+  document.getElementById('steps-goal').textContent=`${pct}% от цели 10 000`;
+}
+
+async function loadSteps(){
+  const val=await dbGet('trackers/steps-'+getTodayKey());
+  if(val){document.getElementById('steps-inp').value=val; showSteps(val);}
+}
+
+// ВЕС
+window.saveWeight = async function(){
+  const val=parseFloat(document.getElementById('weight-inp').value);
+  if(!val)return;
+  const history=await dbGet('trackers/weight-history')||[];
+  const arr=Array.isArray(history)?history:Object.values(history);
+  const today=new Date().toLocaleDateString('ru-RU');
+  if(arr.length&&arr[arr.length-1].d===today) arr[arr.length-1].v=val;
+  else arr.push({v:val,d:today});
+  await dbSet('trackers/weight-history', arr);
+  showWeight(arr);
+};
+
+function showWeight(arr){
+  if(!arr||!arr.length)return;
+  const last=arr[arr.length-1];
+  let html=`Последнее: <strong>${last.v} кг</strong> — ${last.d}<br>`;
+  if(arr.length>1){
+    const prev=arr[arr.length-2];
+    const diff=(last.v-prev.v).toFixed(1);
+    html+=`Изменение: ${diff<0?'↓':'↑'} ${Math.abs(diff)} кг`;
+  }
+  const left=(last.v-63).toFixed(1);
+  html+=left>0?`<br>До цели: ${left} кг 🌿`:'<br>Цель достигнута! 🎉';
+  document.getElementById('weight-display').innerHTML=html;
+  document.getElementById('weight-inp').value=last.v;
+}
+
+async function loadWeight(){
+  const data=await dbGet('trackers/weight-history');
+  if(data){const arr=Array.isArray(data)?data:Object.values(data); showWeight(arr);}
+}
+
+// ПЕРЕОПРЕДЕЛЯЕМ showDay чтобы грузить из Firebase
+window.showDay = function(id,el){
+  document.querySelectorAll('.day-view').forEach(d=>d.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('day-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  renderDayEventsFirebase(id);
+  renderAddArea(id);
+};
+
+// ── ИНИЦИАЛИЗАЦИЯ FIREBASE ──
+(async()=>{
+  // Загружаем все данные из Firebase
+  await loadTracker();
+  await loadAndRenderTasks();
+  await loadWater();
+  await loadWorkout();
+  await loadSteps();
+  await loadWeight();
+  // Загружаем события текущего дня
+  await renderDayEventsFirebase(todayDay);
+  console.log('Firebase синхронизирован ✓');
+})();
+</script>
+
 </body>
 </html>
