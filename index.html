@@ -626,7 +626,7 @@ const EXAMS = {
     {time:'13:10',label:'📝 Физика и мехатроника, зачёт',note:'Батырев А.С.'}
   ],
   '2026-05-20': [{time:'10:00',label:'📝 Техническая механика, экзамен',note:'Церенова Н.В.'}],
-  '2026-05-23': [{time:'10:00',label:'📝 Основы мед. знаний и ЗОЖ, консультация',note:'Бурлыкова Э.Б.'}],
+  '2026-05-22': [{time:'10:00',label:'📝 Основы мед. знаний и ЗОЖ, консультация',note:'Бурлыкова Э.Б.'}],
   '2026-05-25': [{time:'10:00',label:'📝 ОМЗ, экзамен',note:'Бурлыкова Э.Б.'}],
   '2026-05-28': [{time:'10:00',label:'📝 ЕНКМ, консультация',note:'Красноруцкая Н.Г.'}],
   '2026-05-29': [{time:'10:00',label:'📝 ЕНКМ, экзамен',note:'Красноруцкая Н.Г.'}],
@@ -656,7 +656,10 @@ function getWeekDates(){
   for(let i=0;i<7;i++){
     const d=new Date(monday);
     d.setDate(monday.getDate()+i);
-    map[days[i]]=d.toISOString().slice(0,10);
+    const dd=String(d.getDate()).padStart(2,'0');
+    const mm=String(d.getMonth()+1).padStart(2,'0');
+    const yyyy=d.getFullYear();
+    map[days[i]]=`${yyyy}-${mm}-${dd}`;
   }
   return map;
 }
