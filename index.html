@@ -571,6 +571,7 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
       <div class="tracker-sub">цель — 8 стаканов в день</div>
       <div class="water-row" id="water-row"></div>
       <div style="font-size:.75rem;color:var(--soft)" id="water-label">0 из 8 стаканов</div>
+      <div id="water-history" style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.8"></div>
     </div>
   </div>
 
@@ -594,6 +595,7 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
       </div>
       <div class="steps-display" id="steps-display">— шагов</div>
       <div class="steps-goal" id="steps-goal"></div>
+      <div id="steps-history" style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.8"></div>
     </div>
   </div>
 
@@ -764,7 +766,7 @@ function deleteEvent(date,id){
 // ── ЗАДАЧИ ──
 function getTodayKey(){return new Date().toISOString().slice(0,10)}
 function renderTasks(){
-  const key=getTodayKey();
+  const key='my-tasks'();
   const tasks=JSON.parse(localStorage.getItem('tasks-'+key)||'[]');
   const list=document.getElementById('tasks-list');
   const sub=document.getElementById('tasks-date-sub');
@@ -789,7 +791,7 @@ function addTask(){
   const inp=document.getElementById('task-input');
   const text=inp.value.trim();
   if(!text)return;
-  const key=getTodayKey();
+  const key='my-tasks'();
   const tasks=JSON.parse(localStorage.getItem('tasks-'+key)||'[]');
   tasks.push({text,done:false});
   localStorage.setItem('tasks-'+key,JSON.stringify(tasks));
@@ -797,14 +799,14 @@ function addTask(){
   renderTasks();
 }
 function toggleTask(i){
-  const key=getTodayKey();
+  const key='my-tasks'();
   const tasks=JSON.parse(localStorage.getItem('tasks-'+key)||'[]');
   tasks[i].done=!tasks[i].done;
   localStorage.setItem('tasks-'+key,JSON.stringify(tasks));
   renderTasks();
 }
 function deleteTask(i){
-  const key=getTodayKey();
+  const key='my-tasks'();
   const tasks=JSON.parse(localStorage.getItem('tasks-'+key)||'[]');
   tasks.splice(i,1);
   localStorage.setItem('tasks-'+key,JSON.stringify(tasks));
@@ -1140,6 +1142,14 @@ function buildTrackerFromData(saved){
 window.setWater = async function(count){
   const key='water-'+getTodayKey();
   await dbSet('trackers/'+key, count);
+  const wh=await dbGet('trackers/water-history')||[];
+const warr=Array.isArray(wh)?wh:Object.values(wh);
+const wtoday=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+const widx=warr.findIndex(x=>x.d===wtoday);
+if(widx>=0)warr[widx].v=count; else warr.push({d:wtoday,v:count});
+if(warr.length>7)warr.shift();
+await dbSet('trackers/water-history',warr);
+loadWaterHistory();
   buildWaterFromCount(count);
 };
 
@@ -1194,6 +1204,14 @@ window.saveSteps = async function(){
   const val=document.getElementById('steps-inp').value;
   if(!val)return;
   await dbSet('trackers/steps-'+getTodayKey(), Number(val));
+  const sh=await dbGet('trackers/steps-history')||[];
+const sarr=Array.isArray(sh)?sh:Object.values(sh);
+const stoday=new Date().toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+const sidx=sarr.findIndex(x=>x.d===stoday);
+if(sidx>=0)sarr[sidx].v=Number(val); else sarr.push({d:stoday,v:Number(val)});
+if(sarr.length>7)sarr.shift();
+await dbSet('trackers/steps-history',sarr);
+loadStepsHistory();
   showSteps(Number(val));
 };
 
@@ -1236,6 +1254,21 @@ function showWeight(arr){
   document.getElementById('weight-inp').value=last.v;
 }
 
+  async function loadWaterHistory(){
+  const data=await dbGet('trackers/water-history');
+  const el=document.getElementById('water-history');
+  if(!el||!data)return;
+  const arr=Array.isArray(data)?data:Object.values(data);
+  el.innerHTML='<div style="margin-top:4px;color:var(--soft);font-size:.7rem">История:</div>'+arr.slice(-5).reverse().map(x=>`<span>💧 ${x.d}: ${x.v} ст.</span>`).join('<br>');
+}
+
+async function loadStepsHistory(){
+  const data=await dbGet('trackers/steps-history');
+  const el=document.getElementById('steps-history');
+  if(!el||!data)return;
+  const arr=Array.isArray(data)?data:Object.values(data);
+  el.innerHTML='<div style="margin-top:4px;color:var(--soft);font-size:.7rem">История:</div>'+arr.slice(-5).reverse().map(x=>`<span>👟 ${x.d}: ${Number(x.v).toLocaleString('ru')} шагов</span>`).join('<br>');
+}
 async function loadWeight(){
   const data=await dbGet('trackers/weight-history');
   if(data){const arr=Array.isArray(data)?data:Object.values(data); showWeight(arr);}
@@ -1260,6 +1293,8 @@ window.showDay = function(id,el){
   await loadWorkout();
   await loadSteps();
   await loadWeight();
+  await loadWaterHistory();
+  await loadStepsHistory();
   // Загружаем события текущего дня
   await renderDayEventsFirebase(todayDay);
   console.log('Firebase синхронизирован ✓');
