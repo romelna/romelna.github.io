@@ -272,6 +272,20 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
   background:var(--bg);color:var(--muted);font-size:.76rem;cursor:pointer;
   transition:all .2s;font-family:'Jost',sans-serif;
 }
+  .skill-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 20px;margin-bottom:14px;box-shadow:0 2px 14px var(--shadow)}
+.skill-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.skill-icon{font-size:1.8rem}
+.skill-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--cream)}
+.skill-sub{font-size:.68rem;color:var(--muted);letter-spacing:.08em}
+.skill-streak{margin-left:auto;text-align:center}
+.skill-streak-num{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--warm);line-height:1}
+.skill-streak-label{font-size:.62rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.skill-btn{width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--soft);font-family:'Jost',sans-serif;font-size:.82rem;cursor:pointer;transition:all .2s}
+.skill-btn.done-today{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:500}
+.skill-history{font-size:.7rem;color:var(--muted);margin-top:10px;line-height:1.8}
+.skill-dots{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.skill-dot{width:10px;height:10px;border-radius:50%;background:var(--border)}
+.skill-dot.filled{background:var(--warm)}
 .wd-btn.active{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:500}
 </style>
 </head>
@@ -286,6 +300,7 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
     <div class="tab" onclick="showSection('massage',this)">🌸 Уход</div>
     <div class="tab gold-tab" onclick="showSection('urssar',this)">🕯 Үрс Сар</div>
     <div class="tab" onclick="showSection('trackers',this)">📊 Трекеры</div>
+    <div class="tab" onclick="showSection('skills',this)">✦ Навыки</div>
   </div>
 </nav>
 
@@ -560,6 +575,45 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
   </div>
 </div>
 
+<!-- ══ НАВЫКИ ══ -->
+<div id="skills" class="section">
+  <div class="sh">Мои навыки</div>
+  <div class="ss">практика · каждый день</div>
+
+  <div class="skill-card" id="skill-figma">
+    <div class="skill-top">
+      <div class="skill-icon">🎨</div>
+      <div><div class="skill-name">Figma</div><div class="skill-sub">дизайн · упражнения</div></div>
+      <div class="skill-streak"><div class="skill-streak-num" id="streak-figma">0</div><div class="skill-streak-label">дней подряд</div></div>
+    </div>
+    <div class="skill-dots" id="dots-figma"></div>
+    <button class="skill-btn" id="btn-figma" onclick="toggleSkill('figma')">+ Занималась сегодня</button>
+    <div class="skill-history" id="hist-figma"></div>
+  </div>
+
+  <div class="skill-card" id="skill-illustrator">
+    <div class="skill-top">
+      <div class="skill-icon">✏️</div>
+      <div><div class="skill-name">Illustrator</div><div class="skill-sub">иллюстрация · вектор</div></div>
+      <div class="skill-streak"><div class="skill-streak-num" id="streak-illustrator">0</div><div class="skill-streak-label">дней подряд</div></div>
+    </div>
+    <div class="skill-dots" id="dots-illustrator"></div>
+    <button class="skill-btn" id="btn-illustrator" onclick="toggleSkill('illustrator')">+ Занималась сегодня</button>
+    <div class="skill-history" id="hist-illustrator"></div>
+  </div>
+
+  <div class="skill-card" id="skill-ai">
+    <div class="skill-top">
+      <div class="skill-icon">🤖</div>
+      <div><div class="skill-name">Нейронки</div><div class="skill-sub">промптинг · изображения · видео</div></div>
+      <div class="skill-streak"><div class="skill-streak-num" id="streak-ai">0</div><div class="skill-streak-label">дней подряд</div></div>
+    </div>
+    <div class="skill-dots" id="dots-ai"></div>
+    <button class="skill-btn" id="btn-ai" onclick="toggleSkill('ai')">+ Занималась сегодня</button>
+    <div class="skill-history" id="hist-ai"></div>
+  </div>
+</div>
+  
 <!-- ══ ТРЕКЕРЫ ══ -->
 <div id="trackers" class="section">
   <div class="sh">Трекеры</div><div class="ss">вода · тренировки · шаги · вес</div>
@@ -1254,6 +1308,65 @@ function showWeight(arr){
   document.getElementById('weight-inp').value=last.v;
 }
 
+  const SKILLS=['figma','illustrator','ai'];
+
+window.toggleSkill=async function(id){
+  const today=new Date().toISOString().slice(0,10);
+  const data=await dbGet('skills/'+id)||{};
+  data[today]?delete data[today]:(data[today]=true);
+  await dbSet('skills/'+id, data);
+  renderSkill(id, data);
+};
+
+function renderSkill(id, data){
+  const today=new Date().toISOString().slice(0,10);
+  const doneToday=!!data[today];
+  const btn=document.getElementById('btn-'+id);
+  if(btn){btn.textContent=doneToday?'✓ Сегодня занималась':'+ Занималась сегодня';btn.className='skill-btn'+(doneToday?' done-today':'');}
+
+  // стрик
+  let streak=0;
+  const d=new Date();
+  while(true){
+    const key=d.toISOString().slice(0,10);
+    if(data[key]) streak++;
+    else break;
+    d.setDate(d.getDate()-1);
+  }
+  const sEl=document.getElementById('streak-'+id);
+  if(sEl)sEl.textContent=streak;
+
+  // точки последних 14 дней
+  const dots=document.getElementById('dots-'+id);
+  if(dots){
+    dots.innerHTML='';
+    for(let i=13;i>=0;i--){
+      const dd=new Date(); dd.setDate(dd.getDate()-i);
+      const key=dd.toISOString().slice(0,10);
+      const dot=document.createElement('div');
+      dot.className='skill-dot'+(data[key]?' filled':'');
+      dot.title=dd.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+      dots.appendChild(dot);
+    }
+  }
+
+  // история последних 5 дней
+  const hist=document.getElementById('hist-'+id);
+  if(hist){
+    const days=Object.keys(data).filter(k=>data[k]).sort().reverse().slice(0,5);
+    hist.innerHTML=days.length?days.map(k=>{
+      const dd=new Date(k);
+      return `✦ ${dd.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',weekday:'short'})}`;
+    }).join(' · '):'';
+  }
+}
+
+async function loadSkills(){
+  for(const id of SKILLS){
+    const data=await dbGet('skills/'+id)||{};
+    renderSkill(id,data);
+  }
+}
   async function loadWaterHistory(){
   const data=await dbGet('trackers/water-history');
   const el=document.getElementById('water-history');
@@ -1294,6 +1407,7 @@ window.showDay = function(id,el){
   await loadSteps();
   await loadWeight();
   await loadWaterHistory();
+  await loadSkills();
   await loadStepsHistory();
   // Загружаем события текущего дня
   await renderDayEventsFirebase(todayDay);
