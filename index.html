@@ -283,7 +283,7 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
 .skill-btn{width:100%;padding:10px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--soft);font-family:'Jost',sans-serif;font-size:.82rem;cursor:pointer;transition:all .2s}
 .skill-btn.done-today{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:500}
 .skill-history{font-size:.7rem;color:var(--muted);margin-top:10px;line-height:1.8}
-.skill-dots{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.skill-dots{display:flex;gap:5px;margin-top:8px;margin-bottom:10px;flex-wrap:wrap}
 .skill-dot{width:10px;height:10px;border-radius:50%;background:var(--border)}
 .skill-dot.filled{background:var(--warm)}
 .wd-btn.active{background:var(--sage);border-color:var(--sage);color:#fff;font-weight:500}
@@ -299,9 +299,9 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
     <div class="tab" onclick="showSection('routines',this)">☀️ Рутины</div>
     <div class="tab" onclick="showSection('massage',this)">🌸 Уход</div>
     <div class="tab gold-tab" onclick="showSection('urssar',this)">🕯 Үрс Сар</div>
-    <div class="tab" onclick="showSection('trackers',this)">📊 Трекеры</div>
     <div class="tab" onclick="showSection('skills',this)">✦ Навыки</div>
-  </div>
+    <div class="tab" onclick="showSection('trackers',this)">📊 Трекеры</div>
+    </div>
 </nav>
 
 <!-- ══ НЕДЕЛЯ ══ -->
@@ -625,7 +625,9 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
       <div class="tracker-sub">цель — 8 стаканов в день</div>
       <div class="water-row" id="water-row"></div>
       <div style="font-size:.75rem;color:var(--soft)" id="water-label">0 из 8 стаканов</div>
-      <div id="water-history" style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.8"></div>
+      <div id="steps-history" style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.8"></div>
+      <div id="steps-month" style="font-size:.72rem;color:var(--soft);margin-top:4px;line-height:1.8"></div>
+      <div id="water-month" style="font-size:.72rem;color:var(--soft);margin-top:4px;line-height:1.8"></div>
     </div>
   </div>
 
@@ -1370,17 +1372,89 @@ async function loadSkills(){
   async function loadWaterHistory(){
   const data=await dbGet('trackers/water-history');
   const el=document.getElementById('water-history');
-  if(!el||!data)return;
+  const mel=document.getElementById('water-month');
+  if(!data)return;
   const arr=Array.isArray(data)?data:Object.values(data);
-  el.innerHTML='<div style="margin-top:4px;color:var(--soft);font-size:.7rem">История:</div>'+arr.slice(-5).reverse().map(x=>`<span>💧 ${x.d}: ${x.v} ст.</span>`).join('<br>');
+  
+  // последние 5 дней
+  if(el) el.innerHTML=arr.slice(-5).reverse().map(x=>`💧 ${x.d}: ${x.v} ст.`).join('<br>');
+  
+  // текущий месяц
+  const now=new Date();
+  const thisMonth=now.getMonth();
+  const thisYear=now.getFullYear();
+  const lastMonth=thisMonth===0?11:thisMonth-1;
+  const lastYear=thisMonth===0?thisYear-1:thisYear;
+  
+  const thisArr=arr.filter(x=>{
+    const parts=x.d.split('.');
+    if(parts.length<2)return false;
+    const d=new Date(thisYear,parseInt(parts[1])-1,parseInt(parts[0]));
+    return d.getMonth()===thisMonth&&d.getFullYear()===thisYear;
+  });
+  const lastArr=arr.filter(x=>{
+    const parts=x.d.split('.');
+    if(parts.length<2)return false;
+    const d=new Date(lastYear,parseInt(parts[1])-1,parseInt(parts[0]));
+    return d.getMonth()===lastMonth&&d.getFullYear()===lastYear;
+  });
+  
+  if(mel){
+    let html='';
+    if(thisArr.length){
+      const avg=(thisArr.reduce((s,x)=>s+x.v,0)/thisArr.length).toFixed(1);
+      html+=`📅 Этот месяц: среднее ${avg} ст./день (${thisArr.length} дн.)`;
+    }
+    if(lastArr.length){
+      const avg=(lastArr.reduce((s,x)=>s+x.v,0)/lastArr.length).toFixed(1);
+      html+=`<br>📆 Прошлый месяц: среднее ${avg} ст./день`;
+    }
+    mel.innerHTML=html;
+  }
 }
 
 async function loadStepsHistory(){
   const data=await dbGet('trackers/steps-history');
   const el=document.getElementById('steps-history');
-  if(!el||!data)return;
+  const mel=document.getElementById('steps-month');
+  if(!data)return;
   const arr=Array.isArray(data)?data:Object.values(data);
-  el.innerHTML='<div style="margin-top:4px;color:var(--soft);font-size:.7rem">История:</div>'+arr.slice(-5).reverse().map(x=>`<span>👟 ${x.d}: ${Number(x.v).toLocaleString('ru')} шагов</span>`).join('<br>');
+  
+  // последние 5 дней
+  if(el) el.innerHTML=arr.slice(-5).reverse().map(x=>`👟 ${x.d}: ${Number(x.v).toLocaleString('ru')} шагов`).join('<br>');
+  
+  // месяцы
+  const now=new Date();
+  const thisMonth=now.getMonth();
+  const thisYear=now.getFullYear();
+  const lastMonth=thisMonth===0?11:thisMonth-1;
+  const lastYear=thisMonth===0?thisYear-1:thisYear;
+  
+  const thisArr=arr.filter(x=>{
+    const parts=x.d.split('.');
+    if(parts.length<2)return false;
+    const d=new Date(thisYear,parseInt(parts[1])-1,parseInt(parts[0]));
+    return d.getMonth()===thisMonth&&d.getFullYear()===thisYear;
+  });
+  const lastArr=arr.filter(x=>{
+    const parts=x.d.split('.');
+    if(parts.length<2)return false;
+    const d=new Date(lastYear,parseInt(parts[1])-1,parseInt(parts[0]));
+    return d.getMonth()===lastMonth&&d.getFullYear()===lastYear;
+  });
+  
+  if(mel){
+    let html='';
+    if(thisArr.length){
+      const avg=Math.round(thisArr.reduce((s,x)=>s+x.v,0)/thisArr.length);
+      html+=`📅 Этот месяц: среднее ${avg.toLocaleString('ru')} шагов/день (${thisArr.length} дн.)`;
+    }
+    if(lastArr.length){
+      const avg=Math.round(lastArr.reduce((s,x)=>s+x.v,0)/lastArr.length);
+      html+=`<br>📆 Прошлый месяц: среднее ${avg.toLocaleString('ru')} шагов/день`;
+    }
+    mel.innerHTML=html;
+  }
 }
 async function loadWeight(){
   const data=await dbGet('trackers/weight-history');
