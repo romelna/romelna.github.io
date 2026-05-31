@@ -616,7 +616,8 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
   
 <!-- ══ ТРЕКЕРЫ ══ -->
 <div id="trackers" class="section">
-  <div class="sh">Трекеры</div><div class="ss">вода · тренировки · шаги · вес</div>
+  <div class="sh">Трекеры</div>
+  <div class="ss">шаги · вода · тренировки · вес</div>
 
   <!-- ШАГИ -->
   <div class="tracker-section">
@@ -640,13 +641,12 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
       <div class="tracker-sub">цель — 8 стаканов в день</div>
       <div class="water-row" id="water-row"></div>
       <div style="font-size:.75rem;color:var(--soft)" id="water-label">0 из 8 стаканов</div>
-      <div id="steps-history" style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.8"></div>
-      <div id="steps-month" style="font-size:.72rem;color:var(--soft);margin-top:4px;line-height:1.8"></div>
+      <!-- Удалены дубликаты ID steps-history и лишние пустые блоки -->
       <div id="water-month" style="font-size:.72rem;color:var(--soft);margin-top:4px;line-height:1.8"></div>
     </div>
   </div>
 
-   <!-- ТРЕНИРОВКИ -->
+  <!-- ТРЕНИРОВКИ -->
   <div class="tracker-section">
     <div class="tracker-card">
       <div class="tracker-title">🏃 Тренировки</div>
@@ -668,35 +668,35 @@ body{background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-w
       <div class="weight-goal">🎯 Цель: 63 кг</div>
     </div>
   </div>
-</div>
 
   <!-- ИТОГО ЗА МЕСЯЦ -->
-<div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:8px;box-shadow:0 2px 14px var(--shadow)">
-  <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--cream);margin-bottom:14px">📊 Итого за месяц</div>
-  <div id="month-summary" style="display:flex;flex-direction:column;gap:10px">
-    <div id="summary-steps" style="background:#f5faf0;border-radius:12px;padding:12px 16px;border-left:3px solid var(--green)">
-      <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">👟 Шаги</div>
-      <div id="summary-steps-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
-      <div id="summary-steps-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
-    </div>
-    <div id="summary-water" style="background:#eef4f8;border-radius:12px;padding:12px 16px;border-left:3px solid var(--sky)">
-      <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">💧 Вода</div>
-      <div id="summary-water-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
-      <div id="summary-water-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
-    </div>
-    <div id="summary-weight" style="background:#fdf0eb;border-radius:12px;padding:12px 16px;border-left:3px solid var(--rose)">
-      <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">⚖️ Вес</div>
-      <div id="summary-weight-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
-      <div id="summary-weight-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
-    </div>
-    <div id="summary-workout" style="background:#f0f7f1;border-radius:12px;padding:12px 16px;border-left:3px solid var(--sage)">
-      <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">🏃 Тренировки</div>
-      <div id="summary-workout-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
-      <div id="summary-workout-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:8px;box-shadow:0 2px 14px var(--shadow)">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--cream);margin-bottom:14px">📊 Итого за месяц</div>
+    <div id="month-summary" style="display:flex;flex-direction:column;gap:10px">
+      <div id="summary-steps" style="background:#f5faf0;border-radius:12px;padding:12px 16px;border-left:3px solid var(--green)">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">👟 Шаги</div>
+        <div id="summary-steps-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
+        <div id="summary-steps-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <div id="summary-water" style="background:#eef4f8;border-radius:12px;padding:12px 16px;border-left:3px solid var(--sky)">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">💧 Вода</div>
+        <div id="summary-water-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
+        <div id="summary-water-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <div id="summary-weight" style="background:#fdf0eb;border-radius:12px;padding:12px 16px;border-left:3px solid var(--rose)">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">⚖️ Вес</div>
+        <div id="summary-weight-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
+        <div id="summary-weight-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <div id="summary-workout" style="background:#f0f7f1;border-radius:12px;padding:12px 16px;border-left:3px solid var(--sage)">
+        <div style="font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">🏃 Тренировки</div>
+        <div id="summary-workout-val" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--cream)">—</div>
+        <div id="summary-workout-prev" style="font-size:.72rem;color:var(--muted);margin-top:2px"></div>
+      </div>
     </div>
   </div>
-</div>
 
+</div> <!-- ЭТОТ ТЕГ ЗАКРЫВАЕТ СЕКЦИЮ "trackers" -->
 <script>
 // ── ДАТЫ ЭКЗАМЕНОВ ──
 const EXAMS = {
